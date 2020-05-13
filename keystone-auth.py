@@ -8,7 +8,7 @@ import os
 import sys
 import syslog
 import traceback
-import urllib2
+import requests
 
 import yaml
 import memcache
@@ -61,23 +61,22 @@ def pam_sm_authenticate(pamh, flags, argv):
                 }
             }
             keystone_url = keystone_api + '/v3/auth/tokens'
-            req = urllib2.Request(keystone_url)
-            req.add_header('Content-Type', 'application/json')
             try:
                 syslog.syslog(syslog.LOG_AUTH | syslog.LOG_DEBUG,
                     "PAM-Keystone: User %s authenticating with Keystone %s"
                     % (pamh.user, keystone_url))
 
-                response = urllib2.urlopen(req, json.dumps(val))
+                headers = {'Content-Type': 'application/json'}
+                response = requests.post(keystone_url, headers=headers, data=json.dumps(val))
 
-                if (response.getcode() == 201):
+                if (response.status_code == 201):
                     mc.set("%s-%s" % (mu.hexdigest(),mp.hexdigest()),"true", 900)
                     syslog.syslog(syslog.LOG_AUTH | syslog.LOG_INFO,
                         "PAM-Keystone: User %s authenticated" % pamh.user)
                     return pamh.PAM_SUCCESS
-		else:
+                else:
                     syslog.syslog(syslog.LOG_AUTH | syslog.LOG_INFO,
-                        "PAM-Keystone: User %s return code was %s" % (pamh.user, response.getcode()))
+                        "PAM-Keystone: User %s return code was %s" % (pamh.user, response.status_code))
 
             except Exception as E:
                 # Don't want this error, its the 401
