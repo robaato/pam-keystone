@@ -5,7 +5,7 @@ This module allows authenticating against keystone as a
 pam module. E.g. to allow nginx or other system
 services to use keystone users.
 
-It does not create an NSS module, so its for auth only.
+It does not create an NSS module, so its for auth only. Please remember to create a user in NSS beforehand, otherwise auth will fail (the symptom is - replacement of pam.authtok with garbage containg INCORRECT as user was not found in NSS).
 
 To use, copy keystone-auth.py to /lib/security, chmod 555 it.
 Then add a line like 
